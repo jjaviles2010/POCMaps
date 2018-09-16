@@ -1,5 +1,6 @@
 package com.jlapps.pocmaps;
 
+import android.graphics.Color;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.widget.Toast;
@@ -12,6 +13,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -41,7 +43,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         // Localização sede da Google
-        LatLng google = new LatLng(40.740637, -74.002039);
+        final LatLng google = new LatLng(40.740637, -74.002039);
         // Configuração da câmera
         final CameraPosition position = new CameraPosition.Builder()
                 .target(google)     //  Localização
@@ -72,16 +74,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onMapClick(LatLng latLng) {
                 // Criar marker no marker
                 MarkerOptions options = new MarkerOptions();
-                options.position( latLng );
-                mMap.addMarker( options );
+                options.position(latLng);
+                mMap.addMarker(options);
 
                 // Configurando as propriedades da Linha
-               /* PolylineOptions polylineOptions = new PolylineOptions();
-                polylineOptions.add( google );
-                polylineOptions.add( latLng );
-                polylineOptions.color( Color.BLUE );
+                PolylineOptions polylineOptions = new PolylineOptions();
+                polylineOptions.add(google);
+                polylineOptions.add(latLng);
+                polylineOptions.color(Color.BLUE);
                 // Adiciona a linha no mapa
-                mMap.addPolyline( polylineOptions );*/
+                mMap.addPolyline(polylineOptions);
             }
         });
 
