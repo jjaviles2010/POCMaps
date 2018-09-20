@@ -11,6 +11,8 @@ import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -22,10 +24,11 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     private GoogleMap mMap;
     private GoogleApiClient mGoogleApiClient;
+    private LocationRequest locationRequest;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +44,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .addOnConnectionFailedListener(this)
                 .addApi(LocationServices.API)
                 .build();
+
+        locationRequest = new LocationRequest();
+        locationRequest.setInterval(10000);
+        locationRequest.setFastestInterval(5000);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
 
@@ -56,57 +64,42 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        // Localização sede da Google
-        final LatLng google = new LatLng(40.740637, -74.002039);
-        // Configuração da câmera
-        final CameraPosition position = new CameraPosition.Builder()
-                .target(google)     //  Localização
-                .bearing(45)        //  Rotação da câmera
-                .tilt(90)             //  Ângulo em graus
-                .zoom(17)           //  Zoom
-                .build();
-        CameraUpdate update = CameraUpdateFactory.newCameraPosition(position);
-        mMap.animateCamera(update);
-
-        // Criando um objeto do tipo MarkerOptions
-
-        final MarkerOptions markerOptions = new MarkerOptions();
-
-        // Configurando as propriedades do marker
-
-        markerOptions.position(google)    // Localização
-
-                .title("Google Inc.")    // Título
-
-                .snippet("Sede da Google"); // Descrição
-        // Adicionando marcador ao mapa
-
-        mMap.addMarker(markerOptions);
-
-        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
-            @Override
-            public void onMapClick(LatLng latLng) {
-                // Criar marker no marker
-                MarkerOptions options = new MarkerOptions();
-                options.position(latLng);
-                mMap.addMarker(options);
-
-                // Configurando as propriedades da Linha
-                PolylineOptions polylineOptions = new PolylineOptions();
-                polylineOptions.add(google);
-                polylineOptions.add(latLng);
-                polylineOptions.color(Color.BLUE);
-                // Adiciona a linha no mapa
-                mMap.addPolyline(polylineOptions);
-            }
-        });
-
     }
 
+    public void setMyLocation( Location location ){
+        if(location != null) {
+            // Recupera latitude e longitude da
+            // ultima localização do usuário
+            LatLng ultimaLocalizacao = new LatLng(location.getLatitude(), location.getLongitude());
+            // Configuração da câmera
+            final CameraPosition position = new CameraPosition.Builder()
+                    .target(ultimaLocalizacao)     //  Localização
+                    .bearing(45)        //  Rotação da câmera
+                    .tilt(90)            //   ngulo em graus
+                    .zoom(17)           //  Zoom
+                    .build();
+            CameraUpdate update = CameraUpdateFactory.newCameraPosition(position);
+            mMap.animateCamera(update);
+            // Criando um objeto do tipo MarkerOptions
+            final MarkerOptions markerOptions = new MarkerOptions();
+            // Configurando as propriedades do marker
+            markerOptions.position( ultimaLocalizacao )    // Localização
+                    .title("Minha Localização")       // Título
+                    .snippet("Latitude: , Longitude:"); // Descrição
+            mMap.addMarker( markerOptions );
+        }
+    }
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-        Log.i("LOG", "Conectado ao Google Play Services!");
+        startLocationUpdates(); // Inicia o GPS
+        // Log.i("LOG", "Conectado ao Google Play Services!");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopLocationUpdates();//para o GPS
     }
 
     @Override
@@ -129,5 +122,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onStop() {
         mGoogleApiClient.disconnect();
         super.onStop();
+    }
+
+
+
+    // Método responsável por ativar o monitoramento do GPS
+    protected void startLocationUpdates(){
+        //LocationServices.getFusedLocationProviderClient( this );
+        LocationServices.getFusedLocationProviderClient(getApplicationContext()).requestLocationUpdates(this);
+    }
+
+    // Método responsável por desativar o monitoramento do GPS
+    protected void stopLocationUpdates(){
+        LocationServices.getFusedLocationProviderClient(this).removeLocationUpdates(this);
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        setMyLocation( location ); // Atualiza localização do usuário no mapa
     }
 }
